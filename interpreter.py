@@ -32,7 +32,12 @@ class Interpreter:
     def __init__(self, mcs_product=None):
         self.mcs_product = None
         self.set_mcs_product(mcs_product if mcs_product else builtin_macros.get_builtin_macros())
-#        self.macros = [self.get_mcs_macro()] #Stateful; keep sorted or else
+        self.id = 1
+    
+    def take_id(self):
+        result = self.id
+        self.id += 1
+        return result
     
     def get_mcs_macro(self):
         return utils.bracket(PAREN, children=[utils.normal('mcs'),

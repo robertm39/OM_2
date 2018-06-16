@@ -8,8 +8,17 @@ def t-is (~a is ~a) ((True))
 def f-and (False and ~a) ((False))
 def t-and (True and ~a) ((~a))
 
-def f-or (False or ~a) ((~a))
+def f-or (~b or ~a) ((~a))
 def t-or (True or ~a) ((True))
 
 def t-not (not True) ((False))
-def t-not (not False) ((True))
+def f-not (not False) ((True))
+
+#Conditional
+def condt (cond ~a True ~b) ({unw ~a})
+def cond1f (cond ~a False ~b) ({unw ~b})
+
+#Macro manipulation
+
+#Loops
+#def repeat (~a ~n times) ({cond ([unw ~a] [~a [[~n] - 1] times]) [[~n] >= 1] ()})

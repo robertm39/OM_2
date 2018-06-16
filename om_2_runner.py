@@ -22,7 +22,7 @@ def run_file(file, shell):
             line = line.strip()
             if len(line) > 0 and not line[0] in ['#', '@']: #Remove imports and comments
                 text += line + ' '
-    return shell.interpret(text, return_nodes=True)
+    return shell.interpret(text)
 
 def run_om2_project(folder, shell):
     files = []
