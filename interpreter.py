@@ -42,18 +42,15 @@ class Interpreter:
                                                                            [self.mcs_product])])])
     
     def set_mcs_product(self, mcs_product):
-#        print('new product:')
-#        print(mcs_product)
-#        print('************')
         if self.mcs_product != mcs_product:
             self.mcs_product = mcs_product
             if len(self.mcs_product.children) == 1:
                 product = self.mcs_product.children[0].children #Unwrap twice to get inner list
                 self.macros = [node for node in product if is_macro(node)] + [self.get_mcs_macro()]
-    #            print('number of macros:', len(self.macros))
                 self.sort_macros()
             else:
-                print('IMPROPER MCS FORMAT')
+                pass
+#                print('IMPROPER MCS FORMAT')
     
     def sort_macros(self):
         name_indices = {utils.parse('mcs'):len(self.macros)}
@@ -66,7 +63,7 @@ class Interpreter:
                 name_indices[utils.get_name(node)] = i
         
         name_key = lambda macro: name_indices[utils.get_name(macro)] #Secondary sort
-        length_key = lambda macro: len(utils.get_form(macro)) #Primary sort
+        length_key = lambda macro: -len(utils.get_form(macro)) #Primary sort
         
         self.macros.sort(key=name_key) #This works because of stable sorting
         self.macros.sort(key=length_key) #The secondary sort is supposed to go first
