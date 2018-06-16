@@ -1,0 +1,15 @@
+#The def macro
+set-mcs {{(def (def ~n ~f ~p) ({set-mcs {{(~n ~f ~p) [unw [unw [mcs]]]}}})) [unw [unw [mcs]]]}}
+
+def f-is (~a is ~b) ((False))
+def t-is (~a is ~a) ((True))
+
+#Boolean logic
+def f-and (False and ~a) ((False))
+def t-and (True and ~a) ((~a))
+
+def f-or (False or ~a) ((~a))
+def t-or (True or ~a) ((True))
+
+def t-not (not True) ((False))
+def t-not (not False) ((True))
