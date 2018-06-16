@@ -5,10 +5,12 @@ Created on Fri May  4 12:17:43 2018
 @author: rober
 """
 
-import om
 from node import Node
-from node import NodeType
-from node import DEF_NODE
+from node import NodeType, BRACKET_TYPES
+import interpreter as intp
+#from interpreter import Interpreter
+
+CAPTURE = NodeType.CAPTURE
 
 def key_from_name(name):
     return name, 0
@@ -19,16 +21,15 @@ def get_key(node):
 def fill_in_form(form, mappings):
     form = form[:]
     
-    i = 0
-    for node in form:
+    for i in range(0, len(form)):
+        node = form[i]
         if node.node_type is NodeType.CAPTURE:
             key = get_key(node)
             if key in mappings:
                 form[i] = mappings[key]
-        elif node.node_type in om.BRACKET_TYPES:
+        elif node.node_type in BRACKET_TYPES:
             new_nodes = fill_in_form(node.children, mappings)
             form[i] = Node(node.node_type, children=new_nodes)
-        i += 1
         
     return form
 
@@ -38,11 +39,16 @@ def normal(val):
 def capture(val):
     return Node(NodeType.CAPTURE, val=val)
 
+def bracket(b_type, children):
+    return Node(b_type, children=children)
+
+def paren(children):
+    return bracket(NodeType.PAREN, children)
+
 def unpack_and_wrap_node(node):
     if node.node_type is NodeType.PAREN:
         return node.children
     return [node]
-
 
 BRACKET_DICT = {}
 ESCAPE = '`'
@@ -60,12 +66,10 @@ class Bracket:
     def __getitem__(self, index):
         return self.left if index == 0 else self.right if index == 1 else None
 
-BRACKET_TYPES = [NodeType.PAREN, NodeType.SQUARE, NodeType.CURLY]
-
-paren = Bracket(NodeType.PAREN, '()')
-square = Bracket(NodeType.SQUARE, '[]')
-curly = Bracket(NodeType.CURLY, '{}')
-BRACKETS = [paren, square, curly]
+_paren = Bracket(NodeType.PAREN, '()')
+_square = Bracket(NodeType.SQUARE, '[]')
+_curly = Bracket(NodeType.CURLY, '{}')
+BRACKETS = [_paren, _square, _curly]
 
 def matching_bracket_index(line, ind):
     s_ind = ind
@@ -138,10 +142,68 @@ def parse(token):
             
             node = Node(bracket.node_type, children=children)
             return node
-#    if token[0] == '~':
-#        text = token[1:]
-#        node = Node(NodeType.CAPTURE, val=text)
-#        return node
-    if token == DEF_NODE.val:
-        return DEF_NODE
+    if token[0] == '~':
+        return Node(NodeType.CAPTURE, val=token[1:])
     return Node(NodeType.NORMAL, val=token)
+
+def get_name(macro):
+    return macro.children[0]
+
+def get_form(macro):
+    return macro.children[1].children
+
+def get_product(macro):
+    return macro.children[2].children
+
+def eval_macro(product, mappings, interpreter):
+#    print('vvvvvvvv')
+#    print('product: ' + str(product))
+#    print('^^^^^^^^')
+    if product[0].node_type != NodeType.FUNC:
+        prod_result = fill_in_form(product, mappings)
+        i = intp.Interpreter(interpreter.mcs_product) #No side effects if BALK
+        evaluated = i.interpret_nodes(prod_result)[0] #The first should be either BALK or a PAREN
+        if evaluated != normal('BALK'):
+            evaluated = evaluated.children #Unwrap
+            interpreter.set_mcs_product(i.mcs_product) #Now side effects take place
+            return True, evaluated
+        else:
+            return False, None
+    else: #product is a Python function mappings, interpreter -> nodes
+        return product[0](mappings, interpreter)
+    
+not_match = False, {}
+def matches(nodes, form, mappings=None, exact=False): #Return boolean and mappings
+    mappings = mappings if mappings else {} #Initialize mappings
+    
+    m_len = len(form)
+    
+    if len(nodes) < m_len:
+        return not_match
+    if exact and len(nodes) > m_len:
+        return not_match
+    
+    for i in range(0, m_len):
+        n = nodes[i] #nodes is at least as long as form
+        m = form[i]
+        
+        if m.node_type is CAPTURE:
+            m_key = get_key(m)
+            if m_key in mappings:
+                captured = mappings[m_key]
+                if n != captured:
+                    return not_match
+            else:
+                mappings[m_key] = n
+        elif m.node_type in BRACKET_TYPES:
+            if n.node_type == m.node_type:
+                bracket_match, mappings = matches(n.children, m.children, mappings=mappings, exact=True)
+                if not bracket_match:
+                    return not_match
+            else:
+                return not_match
+        else:
+            if n != m:
+                return not_match
+    
+    return True, mappings

@@ -13,21 +13,27 @@ class NodeType(Enum):
     CURLY = 'CURLY'     #{}
     CAPTURE = 'CAPTURE' #cap word (The cap macro)
     NORMAL = 'NORMAL'   #word
+    FUNC = 'FUNC' #A python function; for python function macros
 
+#print('NODENODENODENODE')
 
 BRACKET_TYPES = [NodeType.PAREN, NodeType.SQUARE, NodeType.CURLY]
 
 class Node:
-    def __init__(self, node_type, val='', children=[]):
+    def __init__(self, node_type, val='', children=[], func=None):
         self.node_type = node_type
         self.val = val
         self.v_hash = hash(self.val)
         self.children = children[:]
+        self.func = func
         self.id = 0 #The common id
     
     def copy(self):
         c_copy = [c.copy() for c in self.children]
         return Node(self.node_type, self.val, c_copy)
+    
+    def __call__(self, mappings, interpreter):
+        return self.func(mappings, interpreter)
     
     def __str__(self, depth=0):
         id_part = '::' + str(self.id) if self.id != 0 else ''
