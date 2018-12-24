@@ -25,8 +25,15 @@ def get_func_macro(name_exp, form_exp, func, func_name):
     product = utils.paren([func_node])
     return get_macro(name, form, product)
 
+def wrap_bin_func(mappings, bin_func):
+    try:
+        return (True, [utils.normal(str(bin_func(get(mappings, 'a'), get(mappings, 'b'))))])
+    except ValueError:
+        return False, []
+
 def get_binary_macro(sign, bin_func):
-    func = lambda mappings, interpreter: (True, [utils.normal(str(bin_func(get(mappings, 'a'), get(mappings, 'b'))))])
+#    func = lambda mappings, interpreter: (True, [utils.normal(str(bin_func(get(mappings, 'a'), get(mappings, 'b'))))])
+    func = lambda mappings, interpreter: wrap_bin_func(mappings, bin_func)
     return get_func_macro(sign, '(~a ' + sign + ' ~b)', func, sign + '_product')
 
 def get(mappings, name):
@@ -94,8 +101,10 @@ def tail_macro():
 ###############################################################################
 def head_product(mappings, interpreter):
     l = get(mappings, 'l')
-    head = l.children[0]
-    return True, [head]
+    if l.children:
+        head = l.children[0]
+        return True, [head]
+    return True, [] #The macro still works, but it's empty
     
 def head_macro():
     return get_func_macro('head', '(head ~l)', head_product, 'head_product')

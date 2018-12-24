@@ -1,5 +1,24 @@
 #The def macro
-set-mcs {{(def (def ~n ~f ~p) ({set-mcs {{(~n ~f ~p) [unw [unw [mcs]]]}}})) [unw [unw [mcs]]]}}
+set-mcs {{
+            (def 
+                (def ~n ~f ~p) 
+                ({set-mcs 
+                    {{
+                        (~n ~f ~p)
+                        [unw [unw [mcs]]]
+                    }}
+                })
+            ) 
+            [unw [unw [mcs]]]
+        }}
+
+def set
+    (set ~n ~v)
+    ({
+        def ~n
+        (~n)
+        ({~v})
+    })
 
 def f-is (~a is ~b) ((False))
 def t-is (~a is ~a) ((True))
@@ -8,7 +27,7 @@ def t-is (~a is ~a) ((True))
 def f-and (False and ~a) ((False))
 def t-and (True and ~a) ((~a))
 
-def f-or (~b or ~a) ((~a))
+def f-or (False or ~a) ((~a))
 def t-or (True or ~a) ((True))
 
 def t-not (not True) ((False))
@@ -16,9 +35,84 @@ def f-not (not False) ((True))
 
 #Conditional
 def condt (cond ~a True ~b) ({unw ~a})
-def cond1f (cond ~a False ~b) ({unw ~b})
+def condf (cond ~a False ~b) ({unw ~b})
 
-#Macro manipulation
+#Lists
+def is-empty
+    (is-empty ~l)
+    ({
+        [cntr [~l]] is [cntr {}]
+    })
+
+def len
+    (len ~l)
+    ({cond
+        (0)
+        [is-empty ~l]
+        (1 + [len [tail ~l]])
+    })
 
 #Loops
-#def repeat (~a ~n times) ({cond ([unw ~a] [~a [[~n] - 1] times]) [[~n] >= 1] ()})
+def repeat
+    (~a ~n times)
+    ({cond 
+            (
+                [unw ~a]
+                [~a [[~n] - 1] times]
+            )
+            [[~n] >= 1]
+            ()
+    })
+
+def while
+    (~a while ~b)
+    ({cond
+            (
+                [unw ~a]
+                [~a while ~b]
+            )
+            [unw ~b]
+            ()
+    })
+
+def inner_for
+    (~a FOR ~v IN ~l WITH ~i)
+    ({
+        [set ~i 0]
+        [
+            (
+                [
+                    #Set ~o to the next item
+                    [set ~o [ind [~i] ~l]]
+                    [unw ~a]
+                ]
+                [set ~i [~i + 1]]
+            )
+            while
+            (~i < [len [~l]])
+        ]
+    })
+
+def for
+    (~a for ~v in ~l)
+    ({
+        ~a FOR ~v IN ~l WITH [loc (i) (i)]
+    })
+
+#meta-something
+
+def bubble
+    (bubble ~l)
+    ({unw ~l})
+
+#Macro manipulation
+#Fetch only the macros with the listed names
+#def named
+#    (named ~l)
+#    ({
+#        
+#    }) 
+
+
+
+

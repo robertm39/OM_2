@@ -15,8 +15,6 @@ class NodeType(Enum):
     NORMAL = 'NORMAL'   #word
     FUNC = 'FUNC' #A python function; for python function macros
 
-#print('NODENODENODENODE')
-
 BRACKET_TYPES = [NodeType.PAREN, NodeType.SQUARE, NodeType.CURLY]
 
 class Node:
